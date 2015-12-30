@@ -1,0 +1,21 @@
+{{!-- Allow JS Handlebars braces to show --}}
+{{#raw}}
+
+<script id="cards-template" type="text/x-handlebars-template">
+    <div class="col s12 m6">
+        <div class="card blue-grey darken-1">
+            <div class="card-content white-text">
+                <span class="card-title">{{card_title}}</span>
+
+                <p>{{card_content}}</p>
+            </div>
+            {{#if card_actions}}
+            <div class="card-action">
+                {{card_actions}}
+            </div>
+            {{/if}}
+        </div>
+    </div>
+</script>
+
+{{/raw}}

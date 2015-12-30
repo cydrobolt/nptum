@@ -3,5 +3,17 @@ name = "nptum"
 version = "0.1.0"
 authors = ["Chaoyi Zha <me@cydrobolt.com>"]
 
-[dependencies.nickel]
-version = "*"
+[features]
+watch = ["handlebars-iron/watch"]
+
+[dependencies]
+iron="*"
+persistent="*"
+router = "*"
+mount = "*"
+staticfile="*"
+handlebars-iron="*"
+rustc-serialize = "*"
+# postgres = "*"
+# r2d2="*"
+# r2d2_postgres="*"

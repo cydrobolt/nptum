@@ -2,9 +2,14 @@
     nptum core js
 */
 
-// load handlebars templates
+// load Handlebars templates
 var cards_hbs   = $("#cards-template").html();
 var cards = Handlebars.compile(cards_hbs);
+
+// var rows_hbs   = $("#rows-template").html();
+// var rows = Handlebars.compile(rows_hbs);
+
+
 
 function loadCard(title, body, actions) {
     // actions are optional
@@ -18,6 +23,18 @@ function loadCard(title, body, actions) {
     var html = cards(context);
     $("#cards").append(html);
 }
+
+loadCard("hello", `I am a very simple card.
+I am good at containing small bits of information.
+I am convenient because I require little markup to use effectively.`);
+
+loadCard("hello", `I am a very simple card.
+I am good at containing small bits of information.
+I am convenient because I require little markup to use effectively.`);
+
+loadCard("hello", `I am a very simple card.
+I am good at containing small bits of information.
+I am convenient because I require little markup to use effectively.`);
 
 loadCard("hello", `I am a very simple card.
 I am good at containing small bits of information.
