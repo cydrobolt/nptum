@@ -20,7 +20,6 @@ use urlencoded::UrlEncodedQuery;
 // POST data parser
 use urlencoded::UrlEncodedBody;
 
-
 use handlebars_iron::{Template, HandlebarsEngine};
 use rustc_serialize::json::{ToJson, Json};
 
@@ -37,6 +36,20 @@ impl AfterMiddleware for Custom404 {
             Err(err)
         }
     }
+}
+
+#[derive(RustcDecodable, RustcEncodable)]
+pub struct NoteStruct  {
+    data_int: u8,
+    data_str: String,
+    data_vector: Vec<u8>,
+}
+
+#[derive(RustcDecodable, RustcEncodable)]
+pub struct UserStruct  {
+    data_int: u8,
+    data_str: String,
+    data_vector: Vec<u8>,
 }
 
 fn main() {
