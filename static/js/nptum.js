@@ -72,7 +72,21 @@ $('#new-item-modal-trigger').leanModal({
          $('#modal-rows-list').empty();
      } // Callback for Modal close
    }
- );
+);
+
+$('#login-modal-trigger').leanModal({
+     dismissible: true, // Modal can be dismissed by clicking outside of the modal
+     opacity: 0.5, // Opacity of modal background
+     in_duration: 300, // Transition in duration
+     out_duration: 200, // Transition out duration
+     ready: function() {
+
+     }, // Callback for Modal open
+     complete: function() {
+
+     } // Callback for Modal close
+   }
+);
 
 $('#add-row-in-modal').click(function () {
     var html = modal_rows();
@@ -88,7 +102,7 @@ $('body').delegate('#delete-card', 'click', function () {
     $(this).parent().parent().parent().remove();
 });
 
-loadCard("Note to selfa", `Note to self:<ul>
+loadCard("Note to self", `Note to self:<ul>
 <li>Learn Rust</li>
 <li>Learn Iron</li>
 <li>Learn how to use Sessions with Iron</li>

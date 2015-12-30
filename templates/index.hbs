@@ -15,9 +15,16 @@
         <div class='container'>
             <h3>
                 nptum
-                <a class='header-gh-link' target='_blank' href='//github.com/cydrobolt/nptum'>
+                <a class='header-icon-link' target='_blank' href='//github.com/cydrobolt/nptum'>
                     <i class='fa fa-github'></i>
                 </a>
+                {{#if (!username)}}
+                <a id='login-modal-trigger' class='btn modal-trigger right btn-flat header-icon-link' data-target="login-modal">
+                    <i class='fa fa-sign-in'></i>
+                </a>
+                {{else}}
+                    <span class='right'>{{username}}</span>
+                {{/if}}
             </h3>
 
             <div id='cards'>
@@ -56,6 +63,21 @@
             </div>
             <div class="modal-footer">
                 <a href="#!" id='save-new-note' class="modal-action modal-close waves-effect waves-green btn-flat">Save</a>
+            </div>
+        </div>
+
+        <div id="login-modal" class="modal">
+            <div class="modal-content">
+                <h4>Login</h4>
+                <form method='POST' action='/login'>
+                    <input type="text" name="username" placeholder="Username">
+                    <input type="password" name="password" placeholder="Password">
+
+                    <div class="modal-footer">
+                        <button class='btn' type="submit" formenctype="application/x-www-form-urlencoded">Login</button>
+                        <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Close</a>
+                    </div>
+                </form>
             </div>
         </div>
 

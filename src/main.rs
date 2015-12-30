@@ -1,8 +1,11 @@
 extern crate iron;
-#[macro_use] extern crate router;
+#[macro_use]
+extern crate router;
+
 extern crate handlebars_iron;
 extern crate rustc_serialize;
 extern crate mount;
+extern crate urlencoded;
 extern crate staticfile;
 
 use iron::prelude::*;
@@ -12,6 +15,11 @@ use router::{Router, NoRoute};
 
 use mount::Mount;
 use staticfile::Static;
+// GET data parser
+use urlencoded::UrlEncodedQuery;
+// POST data parser
+use urlencoded::UrlEncodedBody;
+
 
 use handlebars_iron::{Template, HandlebarsEngine};
 use rustc_serialize::json::{ToJson, Json};
@@ -35,9 +43,11 @@ fn main() {
     let mut router = Router::new();
 
     router.get("/", index);
-    // router.get("/:query", handler);
+    router.post("/login", login);
+
 
     let mut mount = Mount::new();
+
     mount.mount("/", router);
     mount.mount("/static", Static::new(Path::new("static")));
 
@@ -48,6 +58,7 @@ fn main() {
 
     let host = "localhost:5000";
     println!("nptum listening on http://{}", host);
+
     Iron::new(chain).http(host).unwrap();
 
     fn index(req: &mut Request) -> IronResult<Response> {
@@ -61,4 +72,14 @@ fn main() {
         resp.set_mut(status::Ok);
         Ok(resp)
     }
+
+    fn login(req: &mut Request) -> IronResult<Response> {
+            match req.get_ref::<UrlEncodedBody>() {
+            Ok(ref hashmap) => println!("Parsed POST request body:\n {:?}", hashmap),
+            Err(ref e) => println!("{:?}", e)
+        };
+
+        Ok(Response::with((status::Ok, "Hello!")))
+    }
+
 }
