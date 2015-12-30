@@ -7,13 +7,34 @@
             <div class="card-content white-text">
                 <span class="card-title">{{card_title}}</span>
 
-                <p>{{card_content}}</p>
+                <p>{{{card_content}}}</p>
             </div>
             {{#if card_actions}}
             <div class="card-action">
                 {{card_actions}}
             </div>
             {{/if}}
+        </div>
+    </div>
+</script>
+
+<script id="rows-template" type="text/x-handlebars-template">
+    <div class="row"></div>
+</script>
+
+<script id="modals-template" type="text/x-handlebars-template">
+    <!-- Modal Structure -->
+    <div id="new-item-modal" class="modal">
+        <div class="modal-content">
+            <h4>New Note</h4>
+            <div class='input-field'>
+                <input id='new-note-title' type='text'>
+                <label for="new-note-title">Title</label>
+            </div>
+            <textarea class='new-note-input' id='new-note-content' placeholder='Today, I...'></textarea>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" id='save-new-note' class=" modal-action modal-close waves-effect waves-green btn-flat">Save</a>
         </div>
     </div>
 </script>

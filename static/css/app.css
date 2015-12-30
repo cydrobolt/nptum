@@ -1,3 +1,7 @@
 body {
     font-family: "Source Code Pro";
 }
+
+.new-note-input {
+    height: 300px;
+}
