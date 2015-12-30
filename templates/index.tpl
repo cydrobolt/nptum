@@ -19,7 +19,7 @@
             </div>
         </div>
 
-        <script src='/js/handlebars-v4.0.5.js'></script>
+        <script src='/js/handlebars-v4.0.5.min.js'></script>
         {{> handlebars_cards }}
         <script src='/js/nptum.js'></script>
     </body>
