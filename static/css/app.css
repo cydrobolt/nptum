@@ -5,3 +5,11 @@ body {
 .new-note-input {
     height: 300px;
 }
+
+.modals-row {
+    width: 96% !important;
+}
+
+.header-gh-link {
+    color: black;
+}
