@@ -14,6 +14,13 @@
     <body>
         <div class='container'>
             <h3>nptum</h3>
+            <div id='cards'>
+                <!-- load cards here -->
+            </div>
         </div>
+
+        <script src='/js/handlebars-v4.0.5.js'></script>
+        {{> handlebars_cards }}
+        <script src='/js/nptum.js'></script>
     </body>
 </html>
