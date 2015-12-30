@@ -44,7 +44,7 @@ function loadCard(title, body, actions) {
 
     var last_row = $('.row').last();
 
-    if ( (!last_row.hasClass('row') ) || (last_row.size() > A_MAX_ITEMS_PER_ROW) ) {
+    if ( (!last_row.hasClass('row') ) || (last_row.children().size() >= A_MAX_ITEMS_PER_ROW) ) {
         // no rows left, create new row
         createNewRow();
     }
@@ -56,6 +56,7 @@ function loadCard(title, body, actions) {
     };
     var html = cards(context);
 
+    last_row = $('.row').last();
     last_row.append(html);
 }
 
