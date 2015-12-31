@@ -21,11 +21,15 @@ use urlencoded::UrlEncodedQuery;
 use urlencoded::UrlEncodedBody;
 
 use handlebars_iron::{Template, HandlebarsEngine};
+
+use rustc_serialize::json;
 use rustc_serialize::json::{ToJson, Json};
 
+use std::io::prelude::*;
 use std::path::Path;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
+use std::fs::File;
 
 struct Custom404;
 impl AfterMiddleware for Custom404 {
@@ -40,19 +44,46 @@ impl AfterMiddleware for Custom404 {
 
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct NoteStruct  {
-    data_int: u8,
-    data_str: String,
-    data_vector: Vec<u8>,
+    title: String,
+    noteContents: String
 }
 
 #[derive(RustcDecodable, RustcEncodable)]
-pub struct UserStruct  {
-    data_int: u8,
-    data_str: String,
-    data_vector: Vec<u8>,
+pub struct User  {
+    username: String,
+    password: String
 }
 
 fn main() {
+    fn get_users() -> Vec<User>{
+        let mut f = File::open("users.json").unwrap();
+        let mut s = String::new();
+        f.read_to_string(&mut s).unwrap();
+        let users:Vec<User> = json::decode(&s).unwrap();
+        println!("{:?}", users[0].username);
+        users
+    }
+
+    fn save_user(username: &str, password: &str) {
+        let mut users: Vec<User> = get_users();
+        // let mut buf = File::create("users.json").unwrap();
+        let mut buf = File::create("users.json").unwrap();
+
+        let mut user = User {
+            username: username.to_string(),
+            password: password.to_string()
+        };
+
+        // let mut users: Vec<User> = Vec::new();
+        users.push(user);
+
+        let raw_json_export = json::encode(&users).unwrap();
+
+        buf.write(raw_json_export.as_bytes());
+
+        println!("Saving User: {:?}", raw_json_export);
+    }
+
     let mut router = Router::new();
 
     router.get("/", index);
@@ -74,6 +105,14 @@ fn main() {
 
     Iron::new(chain).http(host).unwrap();
 
+
+    fn add_user(username: &mut String, password: &mut String) {
+        let mut x: HashMap<&str, &str> = HashMap::new();
+        x.insert("hello", "bye");
+        let mut json_res:String = json::encode(&x).expect("Can't serialize an empty hashmap with a tuple key");
+        println!("{:?}", json_res);
+    }
+
     fn index(req: &mut Request) -> IronResult<Response> {
         let mut resp = Response::new();
 
@@ -87,12 +126,45 @@ fn main() {
     }
 
     fn login(req: &mut Request) -> IronResult<Response> {
-            match req.get_ref::<UrlEncodedBody>() {
-            Ok(ref hashmap) => println!("Parsed POST request body:\n {:?}", hashmap),
+
+        match req.get_ref::<UrlEncodedBody>() {
+            Ok(ref hashmap) => {
+                let mut username = hashmap["username"].clone();
+                let mut password = hashmap["password"].clone();
+
+                let mut user = User {
+                    username: username[0].clone(),
+                    password: password[0].clone()
+                };
+
+                let all_users:Vec<User> = get_users();
+                let mut user_exists = false;
+
+                all_users.iter().find(|x| x.username == username);
+
+                if (user_exists) {
+                    let correct_password = all_users[username].clone();
+                    if (correct_password != password) {
+                        // incorrect password
+                        Ok(Response::with(status::Ok, "Wrong password!"))
+                    }
+                    else {
+                        Ok(Response::with(status::Ok, "Correct password!"))
+                    }
+                }
+                else {
+                    // user does not exist yet
+                    add_user(username, password);
+                    Ok(Response::with(status::Ok, "Creating new user!"))
+                }
+
+                println!("username: {:?}, password: {:?}", user.username, user.password);
+
+                println!("Parsed POST request body:\n {:?}", hashmap);
+            },
             Err(ref e) => println!("{:?}", e)
         };
 
-        Ok(Response::with((status::Ok, "Hello!")))
+        // Ok(Response::with((status::Ok, "Hello!")))
     }
-
 }
