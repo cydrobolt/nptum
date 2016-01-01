@@ -18,13 +18,13 @@
                 <a class='header-icon-link' target='_blank' href='//github.com/cydrobolt/nptum'>
                     <i class='fa fa-github'></i>
                 </a>
-                {{#if (!username)}}
-                <a id='login-modal-trigger' class='btn modal-trigger right btn-flat header-icon-link' data-target="login-modal">
+                <!-- shown only when logged out -->
+                <a id='login-modal-trigger' class='btn {{login-btn-class}} modal-trigger right btn-flat header-icon-link' data-target="login-modal">
                     <i class='fa fa-sign-in'></i>
                 </a>
-                {{else}}
-                    <span class='right'>{{username}}</span>
-                {{/if}}
+                <!-- shown only when logged in -->
+                <span class='right {{username-display-class}}'>{{username}}</span>
+
             </h3>
 
             <div id='cards'>

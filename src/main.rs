@@ -1,7 +1,11 @@
+#[allow(unused_parens)]
+
 extern crate iron;
 #[macro_use]
 extern crate router;
 
+extern crate cookie;
+extern crate oven;
 extern crate handlebars_iron;
 extern crate rustc_serialize;
 extern crate mount;
@@ -15,21 +19,25 @@ use router::{Router, NoRoute};
 
 use mount::Mount;
 use staticfile::Static;
-// GET data parser
-use urlencoded::UrlEncodedQuery;
 // POST data parser
 use urlencoded::UrlEncodedBody;
 
 use handlebars_iron::{Template, HandlebarsEngine};
 
 use rustc_serialize::json;
-use rustc_serialize::json::{ToJson, Json};
+
+use oven::prelude::*;
+use cookie::{Cookie};
 
 use std::io::prelude::*;
 use std::path::Path;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fs::File;
+
+
+// load config
+mod config;
 
 struct Custom404;
 impl AfterMiddleware for Custom404 {
@@ -45,7 +53,7 @@ impl AfterMiddleware for Custom404 {
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct NoteStruct  {
     title: String,
-    noteContents: String
+    contents: String
 }
 
 #[derive(RustcDecodable, RustcEncodable)]
@@ -55,6 +63,8 @@ pub struct User  {
 }
 
 fn main() {
+    let config_vars = config::get_config();
+
     fn get_users() -> Vec<User>{
         let mut f = File::open("users.json").unwrap();
         let mut s = String::new();
@@ -69,7 +79,7 @@ fn main() {
         // let mut buf = File::create("users.json").unwrap();
         let mut buf = File::create("users.json").unwrap();
 
-        let mut user = User {
+        let user = User {
             username: username.to_string(),
             password: password.to_string()
         };
@@ -84,11 +94,12 @@ fn main() {
         println!("Saving User: {:?}", raw_json_export);
     }
 
+    let cookie_signing_key:Vec<u8> = config_vars["cookie_signing_key"].clone().into_bytes();
+
     let mut router = Router::new();
 
     router.get("/", index);
     router.post("/login", login);
-
 
     let mut mount = Mount::new();
 
@@ -96,8 +107,8 @@ fn main() {
     mount.mount("/static", Static::new(Path::new("static")));
 
     let mut chain = Chain::new(mount);
-
     chain.link_after(HandlebarsEngine::new("./templates", ".hbs"));
+    chain.link(oven::new(cookie_signing_key));
     chain.link_after(Custom404);
 
     let host = "localhost:5000";
@@ -107,10 +118,24 @@ fn main() {
 
     fn index(req: &mut Request) -> IronResult<Response> {
         let mut resp = Response::new();
-
         let mut data = BTreeMap::new();
 
-        data.insert("hello".to_string(), "world".to_string());
+        // cookies are signed
+        let cookie_username = req.get_cookie("username");
+
+        match cookie_username {
+            Some(username) => {
+                data.insert("username".to_string(), username.value.to_string());
+
+                data.insert("username-display-class".to_string(), "".to_string());
+                data.insert("login-btn-class".to_string(), "display-none".to_string());
+            },
+            None => {
+                // not logged in
+                data.insert("login-btn-class".to_string(), "".to_string());
+                data.insert("username-display-class".to_string(), "display-none".to_string());
+            }
+        }
 
         resp.set_mut(Template::new("index", data));
         resp.set_mut(status::Ok);
@@ -118,48 +143,46 @@ fn main() {
     }
 
     fn login(req: &mut Request) -> IronResult<Response> {
-
         match req.get_ref::<UrlEncodedBody>() {
             Ok(ref hashmap) => {
-                let mut username = hashmap["username"].clone();
-                let mut password = hashmap["password"].clone();
-
-                let mut user = User {
-                    username: username[0].clone(),
-                    password: password[0].clone()
-                };
+                let username = hashmap["username"].clone();
+                let password = hashmap["password"].clone();
 
                 let all_users:Vec<User> = get_users();
-                // let mut user_exists = false;
 
                 let found_user = all_users.iter().find(|x| x.username == username[0]);
-                println!("Printing username if found!");
-                // println!("{:?}", found_user.unwrap().username);
-                match (found_user) {
+                let mut resp = Response::new();
+
+                let mut data = BTreeMap::new();
+                data.insert("url".to_string(), "/".to_string());
+
+                match found_user {
                     Some(found_user_k) => {
                         let correct_password:String = found_user_k.password.clone();
+
                         if (correct_password != password[0]) {
                             // incorrect password
-                            return Ok(Response::with((status::Ok, "Wrong password!")))
+                            resp.set_mut((status::Ok, Template::new("redirect", data)));
+                            return Ok(resp);
                         }
                         else {
-                            return Ok(Response::with((status::Ok, "Correct password!")))
+                            // correct password
+                            resp.set_cookie(Cookie::new("username".to_string(), username[0].clone()));
+                            resp.set_mut((status::Ok, Template::new("redirect", data)));
+                            return Ok(resp);
                         }
                     },
                     None => {
                         // user does not exist yet
                         save_user(username[0].clone(), password[0].clone());
-                        return Ok(Response::with((status::Ok, "Creating new user!")))
+                        resp.set_cookie(Cookie::new("username".to_string(), username[0].clone()));
+                        resp.set_mut((status::Ok, Template::new("redirect", data)));
+                        return Ok(resp);
                     }
                 }
-
-                println!("username: {:?}, password: {:?}", user.username, user.password);
-
-                println!("Parsed POST request body:\n {:?}", hashmap);
             },
             Err(ref e) => println!("{:?}", e)
         };
-
-        return Ok(Response::with((status::Ok, "Hello!")))
+        return Ok(Response::with((status::Ok, "Oh no! Something went wrong.")))
     }
 }

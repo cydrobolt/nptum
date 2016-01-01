@@ -13,3 +13,7 @@ body {
 .header-icon-link {
     color: black;
 }
+
+.display-none {
+    display: none;
+}
