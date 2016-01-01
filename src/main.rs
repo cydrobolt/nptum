@@ -64,7 +64,7 @@ fn main() {
         users
     }
 
-    fn save_user(username: &str, password: &str) {
+    fn save_user(username: String, password: String) {
         let mut users: Vec<User> = get_users();
         // let mut buf = File::create("users.json").unwrap();
         let mut buf = File::create("users.json").unwrap();
@@ -105,14 +105,6 @@ fn main() {
 
     Iron::new(chain).http(host).unwrap();
 
-
-    fn add_user(username: &mut String, password: &mut String) {
-        let mut x: HashMap<&str, &str> = HashMap::new();
-        x.insert("hello", "bye");
-        let mut json_res:String = json::encode(&x).expect("Can't serialize an empty hashmap with a tuple key");
-        println!("{:?}", json_res);
-    }
-
     fn index(req: &mut Request) -> IronResult<Response> {
         let mut resp = Response::new();
 
@@ -138,24 +130,27 @@ fn main() {
                 };
 
                 let all_users:Vec<User> = get_users();
-                let mut user_exists = false;
+                // let mut user_exists = false;
 
-                all_users.iter().find(|x| x.username == username);
-
-                if (user_exists) {
-                    let correct_password = all_users[username].clone();
-                    if (correct_password != password) {
-                        // incorrect password
-                        Ok(Response::with(status::Ok, "Wrong password!"))
+                let found_user = all_users.iter().find(|x| x.username == username[0]);
+                println!("Printing username if found!");
+                // println!("{:?}", found_user.unwrap().username);
+                match (found_user) {
+                    Some(found_user_k) => {
+                        let correct_password:String = found_user_k.password.clone();
+                        if (correct_password != password[0]) {
+                            // incorrect password
+                            return Ok(Response::with((status::Ok, "Wrong password!")))
+                        }
+                        else {
+                            return Ok(Response::with((status::Ok, "Correct password!")))
+                        }
+                    },
+                    None => {
+                        // user does not exist yet
+                        save_user(username[0].clone(), password[0].clone());
+                        return Ok(Response::with((status::Ok, "Creating new user!")))
                     }
-                    else {
-                        Ok(Response::with(status::Ok, "Correct password!"))
-                    }
-                }
-                else {
-                    // user does not exist yet
-                    add_user(username, password);
-                    Ok(Response::with(status::Ok, "Creating new user!"))
                 }
 
                 println!("username: {:?}, password: {:?}", user.username, user.password);
@@ -165,6 +160,6 @@ fn main() {
             Err(ref e) => println!("{:?}", e)
         };
 
-        // Ok(Response::with((status::Ok, "Hello!")))
+        return Ok(Response::with((status::Ok, "Hello!")))
     }
 }
