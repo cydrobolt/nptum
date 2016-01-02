@@ -51,9 +51,8 @@ impl AfterMiddleware for Custom404 {
 }
 
 #[derive(RustcDecodable, RustcEncodable)]
-pub struct NoteStruct  {
-    title: String,
-    contents: String
+pub struct Notes {
+    dump: String
 }
 
 #[derive(RustcDecodable, RustcEncodable)]
@@ -65,18 +64,28 @@ pub struct User  {
 fn main() {
     let config_vars = config::get_config();
 
-    fn get_users() -> Vec<User>{
+    fn get_users() -> Vec<User> {
         let mut f = File::open("users.json").unwrap();
         let mut s = String::new();
         f.read_to_string(&mut s).unwrap();
         let users:Vec<User> = json::decode(&s).unwrap();
-        println!("{:?}", users[0].username);
         users
+    }
+
+    fn get_notes_for_user(username: String) -> String {
+        let mut f = File::open(
+            format!("notes/{}.json", username)
+        ).unwrap();
+        let mut s = String::new();
+        f.read_to_string(&mut s).unwrap();
+
+        let notes:Notes = json::decode(&s).unwrap();
+
+        notes.dump.clone()
     }
 
     fn save_user(username: String, password: String) {
         let mut users: Vec<User> = get_users();
-        // let mut buf = File::create("users.json").unwrap();
         let mut buf = File::create("users.json").unwrap();
 
         let user = User {
@@ -90,16 +99,35 @@ fn main() {
         let raw_json_export = json::encode(&users).unwrap();
 
         buf.write(raw_json_export.as_bytes());
+    }
 
-        println!("Saving User: {:?}", raw_json_export);
+    fn save_notes_for_user(username: String, dump: String) {
+        let mut buf = File::create(
+            format!("notes/{}.json", username)
+        ).unwrap();
+
+        let notes = Notes {
+            dump: dump.to_string(),
+        };
+
+        let raw_json_export = json::encode(&notes).unwrap();
+
+        buf.write(raw_json_export.as_bytes());
     }
 
     let cookie_signing_key:Vec<u8> = config_vars["cookie_signing_key"].clone().into_bytes();
 
     let mut router = Router::new();
 
+    /* GET requests */
     router.get("/", index);
+    router.get("/api/v1/get_note_data", return_note_data);
+
+    /* POST requests */
     router.post("/login", login);
+
+    /* PUT requests */
+    router.put("/api/v1/sync_note_data", sync_note_data);
 
     let mut mount = Mount::new();
 
@@ -157,8 +185,8 @@ fn main() {
                 data.insert("url".to_string(), "/".to_string());
 
                 match found_user {
-                    Some(found_user_k) => {
-                        let correct_password:String = found_user_k.password.clone();
+                    Some(found_user) => {
+                        let correct_password:String = found_user.password.clone();
 
                         if (correct_password != password[0]) {
                             // incorrect password
@@ -183,6 +211,52 @@ fn main() {
             },
             Err(ref e) => println!("{:?}", e)
         };
-        return Ok(Response::with((status::Ok, "Oh no! Something went wrong.")))
+        return Ok(Response::with((status::InternalServerError, "Oh no! Something went wrong.")))
     }
+
+    fn sync_note_data(req: &mut Request) -> IronResult<Response> {
+        let cookie_username = req.get_cookie("username").cloned();
+
+        match req.get_ref::<UrlEncodedBody>() {
+            Ok(ref hashmap) => {
+                let mut resp = Response::new();
+
+                match cookie_username {
+                    Some(username_from_cookie) => {
+                        // user is logged in
+                        let username:String = username_from_cookie.value.to_string();
+                        let note_data:String = hashmap["notes_dump"][0].clone();
+                        save_notes_for_user(username, note_data);
+                        resp.set_mut((status::Ok, "200 OK"));
+                        return Ok(resp)
+                    },
+                    None => {
+                        resp.set_mut((status::Forbidden, "403 Forbidden: You must log in."));
+                        return Ok(resp)
+                    }
+                }
+            },
+            Err(ref e) => println!("{:?}", e)
+        }
+        Ok(Response::with((status::InternalServerError, "Oh no! Something went wrong.")))
+    }
+
+    fn return_note_data(req: &mut Request) -> IronResult<Response> {
+        let cookie_username = req.get_cookie("username").cloned();
+        let mut resp = Response::new();
+
+        match cookie_username {
+            Some(username_from_cookie) => {
+                let username:String = username_from_cookie.value.to_string();
+                let notes_for_user = get_notes_for_user(username);
+                resp.set_mut((status::Ok, notes_for_user));
+                return Ok(resp)
+            },
+            None => {
+                resp.set_mut((status::Forbidden, "403 Forbidden: You must log in."));
+                return Ok(resp)
+            }
+        }
+    }
+
 }
