@@ -17,3 +17,18 @@ body {
 .display-none {
     display: none;
 }
+
+.not-logged-in-content {
+    position: relative;
+    top: 40%;
+    transform: translateY(-50%);
+    text-align: center;
+}
+
+.login-btn {
+    margin-left: 15px;
+}
+
+.nlc-icon {
+    color: #2c3e50;
+}

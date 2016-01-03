@@ -156,13 +156,13 @@ fn main() {
             Some(username) => {
                 data.insert("username".to_string(), username.value.to_string());
 
-                data.insert("username-display-class".to_string(), "".to_string());
-                data.insert("login-btn-class".to_string(), "display-none".to_string());
+                data.insert("lc-class".to_string(), "".to_string());
+                data.insert("nlc-class".to_string(), "display-none".to_string());
             },
             None => {
                 // not logged in
-                data.insert("login-btn-class".to_string(), "".to_string());
-                data.insert("username-display-class".to_string(), "display-none".to_string());
+                data.insert("nlc-class".to_string(), "".to_string());
+                data.insert("lc-class".to_string(), "display-none".to_string());
             }
         }
 

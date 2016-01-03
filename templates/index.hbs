@@ -12,18 +12,27 @@
         <link href="/static/css/app.css" rel="stylesheet" type="text/css" />
     </head>
     <body>
-        <div class='container'>
+        <div class='container not-logged-in-content {{nlc-class}}'>
+            <h1>nptum</h1>
+            <!-- shown only when logged out -->
+            <a class='header-icon-link' target='_blank' href='//github.com/cydrobolt/nptum'>
+                <i class='fa fa-3x fa-github nlc-icon'></i>
+            </a>
+
+            <a href id='login-modal-trigger' class='modal-trigger header-icon-link login-btn' data-target="login-modal">
+                <i class='fa fa-3x fa-sign-in nlc-icon'></i>
+            </a>
+        </div>
+
+        <div class='container logged-in-content {{lc-class}}'>
             <h3>
                 nptum
                 <a class='header-icon-link' target='_blank' href='//github.com/cydrobolt/nptum'>
                     <i class='fa fa-github'></i>
                 </a>
-                <!-- shown only when logged out -->
-                <a id='login-modal-trigger' class='btn {{login-btn-class}} modal-trigger right btn-flat header-icon-link' data-target="login-modal">
-                    <i class='fa fa-sign-in'></i>
-                </a>
+
                 <!-- shown only when logged in -->
-                <span class='right {{username-display-class}}'>{{username}}</span>
+                <span class='right'>{{username}}</span>
 
             </h3>
 
@@ -33,7 +42,7 @@
         </div>
 
         <!-- New note actions -->
-        <div class="fixed-action-btn" style="bottom: 45px; right: 24px;">
+        <div class="fixed-action-btn {{lc-class}}" style="bottom: 45px; right: 24px;">
             <a id='perform-sync' class="btn btn-floating btn-large blue">
               <i class="large material-icons">sync</i>
             </a>
@@ -86,7 +95,15 @@
             </div>
         </div>
 
+        <script>
+            // not logged in => ""
+            // logged in => "display-none"
+            var loggedIn = "{{nlc-class}}";
+        </script>
+
         <script src='/static/js/handlebars-v4.0.5.min.js'></script>
+        <script src='/static/js/underscore.min.js'></script>
+        <script src='/static/js/backbone.min.js'></script>
         {{> handlebars_cards }}
         <script src='/static/js/lib.js'></script>
         <script src='/static/js/nptum.js'></script>

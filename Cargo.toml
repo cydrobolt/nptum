@@ -3,9 +3,6 @@ name = "nptum"
 version = "0.1.0"
 authors = ["Chaoyi Zha <me@cydrobolt.com>"]
 
-[features]
-watch = ["handlebars-iron/watch"]
-
 [dependencies]
 iron="*"
 persistent="*"

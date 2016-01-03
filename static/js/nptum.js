@@ -6,8 +6,28 @@
 const A_MAX_ITEMS_PER_ROW = 2;
 const A_DEFAULT_MODAL_ROWS = 1;
 
-// Global notes array
-window.notes = {};
+// Backbone model
+var NoteStore = Backbone.Model.extend({
+    initialize: function() {
+        this.on("change", function () {
+            performSync();
+            reloadLocalNotes();
+        });
+    },
+    addNote: function(id, title, contents) {
+        this.set(id, {
+            title: title,
+            contents: contents
+        });
+    },
+    delete: function(id) {
+        this.unset(id);
+    }
+});
+
+// Global notes model
+
+window.notes = new NoteStore();
 
 // Load Handlebars templates
 var cards_hbs   = $("#cards-template").html();
@@ -21,24 +41,14 @@ var modal_rows = Handlebars.compile(modal_rows_hbs);
 
 var cards_elem = $('#cards');
 
-// Download initial note data
-getRemoteNoteData();
-
-function deleteCard(id) {
-    $('#'+id).remove();
-    var cards_last_elem = cards_elem.last();
-    if (cards_last_elem.size() === 0) {
-        cards_last_elem.remove();
-    }
+// Download initial note data only if logged in
+if (loggedIn) {
+    getRemoteNoteData();
 }
 
 function createNewRow() {
     var new_row = rows();
     cards_elem.append(new_row);
-}
-
-function encodeListToJson() {
-
 }
 
 function encodeListToHtml(items_list) {
@@ -72,8 +82,11 @@ function performSync() {
 }
 
 function reloadLocalNotes() {
-    for (key in window.notes) {
-        var ele = window.notes[key];
+    // clear current cards
+    $("#cards").empty();
+
+    for (key in window.notes.attributes) {
+        var ele = window.notes.get(key);
 
         var markup = encodeListToHtml(ele.contents);
         loadCard(ele.title, markup, key);
@@ -85,9 +98,11 @@ function getRemoteNoteData() {
         url: "/api/v1/get_note_data",
         method: "GET"
     }).done(function(data) {
-        window.notes = JSON.parse(data);
+        window.notes = new NoteStore(
+            JSON.parse(data)
+        );
         reloadLocalNotes();
-        Materialize.toast('Initial sync complete.', 4000, 'blue');
+        Materialize.toast('Ready!', 4000, 'blue');
     }).fail(function () {
         Materialize.toast('Initial sync failed.', 4000, 'red');
     });
@@ -139,11 +154,7 @@ $('#save-new-note').click(function () {
     var note_markup = encodeListToHtml(new_note_items);
     var id = loadCard(title, note_markup);
 
-    window.notes[id] = {
-        title: title,
-        contents: new_note_items
-    };
-    performSync();
+    window.notes.addNote(id, title, new_note_items);
 });
 
 $('#new-item-modal-trigger').leanModal({
@@ -197,7 +208,6 @@ $('body').delegate('#delete-modal-row', 'click', function () {
 $('body').delegate('#delete-card', 'click', function () {
     // TODO: automatically restructure rows
     var id = $(this).parent().data('id');
-    delete window.notes[id];
     $(this).parent().parent().parent().remove();
-    performSync();
+    window.notes.delete(id);
 });
