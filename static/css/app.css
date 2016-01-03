@@ -32,3 +32,7 @@ body {
 .nlc-icon {
     color: #2c3e50;
 }
+
+.muted {
+    opacity: 0.2;
+}

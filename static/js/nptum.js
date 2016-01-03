@@ -15,14 +15,19 @@ const A_COLORS = [
     "purple"
 ];
 
+$("#cards").html("<h1 class='muted'>Empty. Why don't you create some notes?</h1>");
+
 const H_CHECK = '<i class="fa fa-check"></i>';
 
 // Backbone model
 var NoteStore = Backbone.Model.extend({
     initialize: function() {
+        this.ifEmptyBackground();
+
         this.on("change", function () {
             performSync();
             reloadLocalNotes();
+            this.ifEmptyBackground();
         });
     },
     addNote: function(id, title, contents, color) {
@@ -34,12 +39,22 @@ var NoteStore = Backbone.Model.extend({
     },
     delete: function(id) {
         this.unset(id);
+    },
+    ifEmptyBackground: function() {
+        var status_elem = $('#status');
+        if (Object.keys(this.attributes).length === 0) {
+            // if no notes set
+            status_elem.html('<h1 class="muted">No notes. Why don\'t you try creating some?');
+        }
+        else {
+            status_elem.empty();
+        }
     }
 });
 
 // Global notes model
 
-window.notes = new NoteStore();
+window.notes = false;
 window.new_item_color = "blue-grey";
 
 // Load Handlebars templates
@@ -131,7 +146,7 @@ function getRemoteNoteData() {
         reloadLocalNotes();
         Materialize.toast('Ready!', 4000, 'blue');
     }).fail(function () {
-        Materialize.toast('Initial sync failed.', 4000, 'red');
+        window.notes = new NoteStore();
     });
 }
 
@@ -155,7 +170,7 @@ function loadCard(title, body, id, color, actions) {
 
     var context = {
         card_id: escapeHtml(id),
-        card_title: escapeHtml(title),
+        card_title: title,
         card_content: body,
         card_actions: actions,
         card_color: escapeHtml(color)
