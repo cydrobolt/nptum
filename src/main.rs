@@ -140,6 +140,7 @@ fn main() {
     chain.link_after(Custom404);
 
     let host = "localhost:5000";
+    // let host = "0.0.0.0:4950";
     println!("nptum listening on http://{}", host);
 
     Iron::new(chain).http(host).unwrap();

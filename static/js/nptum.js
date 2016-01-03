@@ -87,9 +87,9 @@ function getRemoteNoteData() {
     }).done(function(data) {
         window.notes = JSON.parse(data);
         reloadLocalNotes();
-        Materialize.toast('Note download complete.', 4000, 'green');
+        Materialize.toast('Initial sync complete.', 4000, 'blue');
     }).fail(function () {
-        Materialize.toast('Note download failed.', 4000, 'red');
+        Materialize.toast('Initial sync failed.', 4000, 'red');
     });
 }
 
