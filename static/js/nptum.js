@@ -15,8 +15,6 @@ const A_COLORS = [
     "purple"
 ];
 
-$("#cards").html("<h1 class='muted'>Empty. Why don't you create some notes?</h1>");
-
 const H_CHECK = '<i class="fa fa-check"></i>';
 
 // Backbone model
