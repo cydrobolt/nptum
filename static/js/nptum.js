@@ -6,6 +6,17 @@
 const A_MAX_ITEMS_PER_ROW = 2;
 const A_DEFAULT_MODAL_ROWS = 1;
 
+const A_COLORS = [
+    "blue-grey",
+    "red",
+    "orange",
+    "yellow",
+    "blue",
+    "purple"
+];
+
+const H_CHECK = '<i class="fa fa-check"></i>';
+
 // Backbone model
 var NoteStore = Backbone.Model.extend({
     initialize: function() {
@@ -14,10 +25,11 @@ var NoteStore = Backbone.Model.extend({
             reloadLocalNotes();
         });
     },
-    addNote: function(id, title, contents) {
+    addNote: function(id, title, contents, color) {
         this.set(id, {
             title: title,
-            contents: contents
+            contents: contents,
+            color: color
         });
     },
     delete: function(id) {
@@ -28,6 +40,7 @@ var NoteStore = Backbone.Model.extend({
 // Global notes model
 
 window.notes = new NoteStore();
+window.new_item_color = "blue-grey";
 
 // Load Handlebars templates
 var cards_hbs   = $("#cards-template").html();
@@ -39,12 +52,26 @@ var rows = Handlebars.compile(rows_hbs);
 var modal_rows_hbs   = $("#modal-rows-template").html();
 var modal_rows = Handlebars.compile(modal_rows_hbs);
 
+var color_picker_hbs   = $("#color-picker-item-template").html();
+var color_picker_item = Handlebars.compile(color_picker_hbs);
+
 var cards_elem = $('#cards');
 
 // Download initial note data only if logged in
 if (loggedIn) {
     getRemoteNoteData();
 }
+
+// Load colors
+
+A_COLORS.forEach(function (ele, ind, arr) {
+    var item = color_picker_item({
+        "color": ele
+    });
+    $('.color-picker-wrapper').append(item);
+});
+$('.color-picker').first().html(H_CHECK);
+
 
 function createNewRow() {
     var new_row = rows();
@@ -54,7 +81,7 @@ function createNewRow() {
 function encodeListToHtml(items_list) {
     var markup = "<ul>";
     items_list.forEach(function (ele, ind, arr) {
-        markup += "<li>" + ele + "</li>";
+        markup += "<li>" + escapeHtml(ele) + "</li>";
     });
     markup += "</ul>";
     return markup;
@@ -89,7 +116,7 @@ function reloadLocalNotes() {
         var ele = window.notes.get(key);
 
         var markup = encodeListToHtml(ele.contents);
-        loadCard(ele.title, markup, key);
+        loadCard(ele.title, markup, key, ele.color);
     }
 }
 
@@ -108,10 +135,11 @@ function getRemoteNoteData() {
     });
 }
 
-function loadCard(title, body, id, actions) {
+function loadCard(title, body, id, color, actions) {
     // actions are optional
-    if (typeof actions === "undefined") {actions = "";}
+    if (typeof actions === "undefined") {actions = '';}
     if (typeof id === "undefined") {id = false;}
+    if (typeof color === "undefined") {color = 'blue-grey';}
 
 
     var last_row = $('.row').last();
@@ -126,10 +154,11 @@ function loadCard(title, body, id, actions) {
     }
 
     var context = {
-        card_id: id,
-        card_title: title,
+        card_id: escapeHtml(id),
+        card_title: escapeHtml(title),
         card_content: body,
-        card_actions: actions
+        card_actions: actions,
+        card_color: escapeHtml(color)
     };
     var html = cards(context);
 
@@ -152,9 +181,9 @@ $('#save-new-note').click(function () {
     });
 
     var note_markup = encodeListToHtml(new_note_items);
-    var id = loadCard(title, note_markup);
+    var id = loadCard(title, note_markup, undefined, new_item_color);
 
-    window.notes.addNote(id, title, new_note_items);
+    window.notes.addNote(id, title, new_note_items, new_item_color);
 });
 
 $('#new-item-modal-trigger').leanModal({
@@ -206,8 +235,15 @@ $('body').delegate('#delete-modal-row', 'click', function () {
 });
 
 $('body').delegate('#delete-card', 'click', function () {
-    // TODO: automatically restructure rows
     var id = $(this).parent().data('id');
     $(this).parent().parent().parent().remove();
     window.notes.delete(id);
+});
+
+$('body').delegate('.color-picker', 'click', function () {
+    $('.color-picker').each(function() {
+        $(this).html('&nbsp;&nbsp;');
+    });
+    $(this).html(H_CHECK);
+    window.new_item_color = $(this).data('color');
 });
