@@ -36,8 +36,9 @@ use std::collections::HashMap;
 use std::fs::File;
 
 
-// load config
+// Load local modules
 mod config;
+mod lib;
 
 struct Custom404;
 impl AfterMiddleware for Custom404 {
@@ -203,6 +204,11 @@ fn main() {
                     },
                     None => {
                         // user does not exist yet
+                        if (!lib::str_is_alphabetic(username[0].clone())) {
+                            resp.set_mut((status::InternalServerError, Template::new("redirect", data)));
+                            return Ok(resp);
+                        }
+
                         save_user(username[0].clone(), password[0].clone());
                         resp.set_cookie(Cookie::new("username".to_string(), username[0].clone()));
                         resp.set_mut((status::Ok, Template::new("redirect", data)));
